@@ -1,0 +1,124 @@
+/*https://www.spoj.com/problems/KQUERY/
+*/
+
+#include <bits/stdc++.h>
+using namespace std;
+
+#define int long long int
+
+struct query{
+    int idx;
+    int left;
+    int right;
+    int k;
+};
+
+int st[120005];
+
+void build(int x,int lx,int rx)
+{
+    if(lx > rx)
+        return;
+    if(rx-lx <= 1)
+    {
+        st[x] = 1;
+        return;
+    }
+    int m = (lx+rx)/2;
+    build(x*2+1,lx,m);
+    build(x*2+2,m,rx);
+    st[x] = st[x*2+1] + st[x*2+2];
+}
+
+int sum(int l,int r,int x,int lx,int rx)
+{
+    if(lx > rx)
+        return 0;
+    if(l >= rx or lx >= r)
+        return 0;
+    if(lx >= l and rx <= r)
+        return st[x];
+    int m = (lx+rx)/2;
+    return sum(l,r,x*2+1,lx,m) + sum(l,r,x*2+2,m,rx);
+}
+void update(int l,int r,int x,int lx,int rx)
+{
+    if(l >= rx or lx >= r or lx > rx)
+        return;
+    if(lx >= l and rx <= r)
+    {
+        st[x] = 0;
+        return;
+    }
+    int m = (lx+rx)/2;
+    if(l < m)
+        update(l,r,x*2+1,lx,m);
+    else
+        update(l,r,x*2+2,m,rx);
+    st[x] = st[x*2+1] + st[x*2+2];
+    return;
+}
+bool compar2(query q1, query q2)
+{
+    return q1.k < q2.k;
+}
+struct type{
+    int F;
+    int S;
+};
+bool compar1(type a, type b)
+{
+    return a.F < b.F;
+}
+void solve(void)
+{
+    int n;
+    cin >> n;
+    int val;
+    vector<type> a(n);
+    for(int i = 0 ; i < n ; i++)
+    {
+        cin >> val;
+        a[i].F = val;
+        a[i].S = i;
+    }
+    sort(a.begin(),a.end(),compar1);
+
+    build(0,0,n);
+    int L,R,k;
+    int q;
+    cin >> q;
+    vector<query> queries(q);
+    for(int i = 0 ; i < q ; i++)
+    {
+        cin >> L >> R >> k;
+        L--;
+        queries[i].left = L;
+        queries[i].right = R;
+        queries[i].k = k;
+        queries[i].idx = i;
+    }
+    sort(queries.begin(),queries.end(),compar2);
+    vector<int> ans(q);
+    int pos = 0;
+    for(int i = 0 ; i < q ; i++)
+    {
+        while(pos < n && a[pos].F <= queries[i].k)
+        {
+            update(a[pos].S,a[pos].S+1,0,0,n);
+            ++pos;
+        }
+        ans[queries[i].idx] = sum(queries[i].left, queries[i].right,0,0,n);
+    }
+    for(int i = 0 ; i < q ; i++)
+        cout << ans[i] << "\n";
+
+}
+int32_t main()
+{
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    solve();
+
+    return 0;
+}
